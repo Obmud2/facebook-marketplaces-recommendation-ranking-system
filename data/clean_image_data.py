@@ -12,7 +12,7 @@ def resize_image(final_size, im):
     return new_im
 
 if __name__ == '__main__':
-    path = "raw/images/"
+    path = "data/raw/images/"
     save_path = "data/clean_images/"
     dirs = os.listdir(path)
     final_size = 512
