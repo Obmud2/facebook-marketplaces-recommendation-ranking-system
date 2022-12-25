@@ -1,6 +1,7 @@
 from PIL import Image
 from tqdm import tqdm
 import os
+import pandas as pd
 
 def resize_image(final_size, im):
     size = im.size
@@ -15,10 +16,17 @@ if __name__ == '__main__':
     path = "data/raw/images/"
     save_path = "data/clean_images/"
     dirs = os.listdir(path)
-    final_size = 512
-    for item in tqdm(dirs, desc="Images resized: "):
+    pd_dirs = pd.Series(dirs, name="id").apply(lambda x: x.split('.')[0])
+    ref_imgs = pd.read_csv("data/raw/Images.csv")
+    complete_imgs = pd.merge(pd_dirs, ref_imgs)[['id', 'product_id']]
+    complete_imgs.to_csv("data/raw/Images_reduced.csv")
+
+    print(complete_imgs.id)
+
+    final_size = 48
+    for item in tqdm(complete_imgs.id, desc="Images resized: "):
         try:
-            im = Image.open(path + item)
+            im = Image.open(path + item + '.jpg')
             new_im = resize_image(final_size, im)
             new_im.save(f'{save_path}{item.split(".")[0]}_resized.jpg')
         except Image.UnidentifiedImageError:

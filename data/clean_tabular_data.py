@@ -1,14 +1,12 @@
 import pandas as pd
-from torch.utils.data import Dataset
 
-class FBMDatasets(Dataset):
+class FBMDataset():
     def __init__(self) -> None:
-        super().__init__()
         self.categories = self.import_categories()
         self.generate_labels_csv()
 
     def import_images(self) -> pd.DataFrame:
-        df = pd.read_csv("data/raw/Images.csv")
+        df = pd.read_csv("data/raw/Images_reduced.csv")
         return df
 
     def import_products(self) -> pd.DataFrame:
@@ -44,7 +42,7 @@ class FBMDatasets(Dataset):
         i[['id', 'category']].to_csv("data/labels.csv", index=False)
 
 if __name__ == "__main__":
-    i = FBMDatasets()
+    i = FBMDataset()
 
 
 
