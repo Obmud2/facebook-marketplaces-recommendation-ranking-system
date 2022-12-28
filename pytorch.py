@@ -2,11 +2,13 @@ import os
 import pandas as pd
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+from torch.utils.data import random_split
 import torchvision
 import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from PIL import Image
+from torch.utils.tensorboard import SummaryWriter
 
 class ImageDataset(Dataset):
     def __init__(self, annotations_file="data/labels.csv", img_dir="data/clean_images/"):
@@ -50,7 +52,9 @@ class CNN(torch.nn.Module):
         return self.layers(features)
 
 def train(model, epochs=10):
-    optimiser = torch.optim.SGD(model.parameters(), lr=0.1)
+    optimiser = torch.optim.SGD(model.parameters(), lr=0.5)
+    writer = SummaryWriter()
+    batch_idx = 0
     for epoch in range(epochs):
         for batch in train_loader:
             features, labels = batch
@@ -60,10 +64,15 @@ def train(model, epochs=10):
             print(loss.item())
             optimiser.step()
             optimiser.zero_grad()
+            writer.add_scalar("Loss", loss.item(), batch_idx)
+            batch_idx += 1
 
 if __name__ == "__main__":
     dataset = ImageDataset()
-    print(type(dataset[0][1]))
-    train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
+    batch_size = 16
+    train_dataset, validation_dataset, test_dataset = random_split(dataset, [0.7, 0.15, 0.15], generator=torch.Generator().manual_seed(42))
+    train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size)
+    valid_loader = DataLoader(validation_dataset, batch_size)
     model = CNN()
     train(model)
