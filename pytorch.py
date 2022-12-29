@@ -1,4 +1,4 @@
-import os
+import os, math
 import pandas as pd
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -52,6 +52,7 @@ class CNN(torch.nn.Module):
         return self.layers(features)
 
 def train(model, epochs=10):
+    model.train()
     optimiser = torch.optim.SGD(model.parameters(), lr=0.5)
     writer = SummaryWriter()
     batch_idx = 0
@@ -59,17 +60,20 @@ def train(model, epochs=10):
         for batch in train_loader:
             features, labels = batch
             prediction = model(features)
+            prediction_values = prediction.max(1)[1]
+            acc = int(sum(prediction_values == labels)) / len(prediction_values)
             loss = F.cross_entropy(prediction, labels.long())
             loss.backward()
-            print(loss.item())
+            print(f"Epoch: {epoch}\tLoss: {'%.5f'%loss.item()}\tAcc: {('%.3f'%(acc*100)).rjust(6)}%")
             optimiser.step()
             optimiser.zero_grad()
             writer.add_scalar("Loss", loss.item(), batch_idx)
+            writer.add_scalar("Acc", acc, batch_idx)
             batch_idx += 1
 
 if __name__ == "__main__":
     dataset = ImageDataset()
-    batch_size = 16
+    batch_size = 64
     train_dataset, validation_dataset, test_dataset = random_split(dataset, [0.7, 0.15, 0.15], generator=torch.Generator().manual_seed(42))
     train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size)
