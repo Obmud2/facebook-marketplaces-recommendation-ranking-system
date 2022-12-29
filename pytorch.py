@@ -14,7 +14,6 @@ class ImageDataset(Dataset):
     def __init__(self, annotations_file="data/labels.csv", img_dir="data/clean_images/"):
         self.img_labels = pd.read_csv(annotations_file)
         self.img_dir = img_dir
-        
 
     def __len__(self):
         return len(self.img_labels)
@@ -33,18 +32,10 @@ class CNN(torch.nn.Module):
             torch.nn.Conv2d(3, 8, 3),
             torch.nn.ReLU(),
             torch.nn.Conv2d(8, 16, 3),
-            torch.nn.ReLU(),
-            torch.nn.Conv2d(16, 16, 3),
-            torch.nn.ReLU(),
-            torch.nn.Conv2d(16, 16, 3),
             torch.nn.Flatten(),
-            torch.nn.Linear(25600, 2000),
+            torch.nn.Linear(30976, 256),
             torch.nn.ReLU(),
-            torch.nn.Linear(2000, 256),
-            torch.nn.ReLU(),
-            torch.nn.Linear(256, 64),
-            torch.nn.ReLU(),
-            torch.nn.Linear(64, 13),
+            torch.nn.Linear(256, 13),
             torch.nn.Softmax()
         )
 
@@ -53,7 +44,7 @@ class CNN(torch.nn.Module):
 
 def train(model, epochs=10):
     model.train()
-    optimiser = torch.optim.SGD(model.parameters(), lr=0.5)
+    optimiser = torch.optim.SGD(model.parameters(), lr=0.2)
     writer = SummaryWriter()
     batch_idx = 0
     for epoch in range(epochs):
@@ -73,7 +64,7 @@ def train(model, epochs=10):
 
 if __name__ == "__main__":
     dataset = ImageDataset()
-    batch_size = 64
+    batch_size = 32
     train_dataset, validation_dataset, test_dataset = random_split(dataset, [0.7, 0.15, 0.15], generator=torch.Generator().manual_seed(42))
     train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size)
