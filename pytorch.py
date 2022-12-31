@@ -50,6 +50,8 @@ def train(model, epochs=10):
     for epoch in range(epochs):
         for batch in train_loader:
             features, labels = batch
+            features = features.to(device)
+            labels = labels.to(device)
             prediction = model(features)
             prediction_values = prediction.max(1)[1]
             acc = int(sum(prediction_values == labels)) / len(prediction_values)
@@ -62,12 +64,20 @@ def train(model, epochs=10):
             writer.add_scalar("Acc", acc, batch_idx)
             batch_idx += 1
 
+def select_device():
+    if torch.backends.mps.is_built() and torch.backends.mps.is_available():
+        device = torch.device('mps')
+    else:
+        device = torch.device('cpu')
+    return device
+
 if __name__ == "__main__":
+    device = select_device()
     dataset = ImageDataset()
     batch_size = 32
     train_dataset, validation_dataset, test_dataset = random_split(dataset, [0.7, 0.15, 0.15], generator=torch.Generator().manual_seed(42))
     train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size)
     valid_loader = DataLoader(validation_dataset, batch_size)
-    model = CNN()
+    model = CNN().to(device)
     train(model)
