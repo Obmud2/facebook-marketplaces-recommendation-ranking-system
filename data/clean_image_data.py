@@ -21,9 +21,7 @@ if __name__ == '__main__':
     complete_imgs = pd.merge(pd_dirs, ref_imgs)[['id', 'product_id']]
     complete_imgs.to_csv("data/raw/Images_reduced.csv")
 
-    print(complete_imgs.id)
-
-    final_size = 48
+    final_size = 128
     for item in tqdm(complete_imgs.id, desc="Images resized: "):
         try:
             im = Image.open(path + item + '.jpg')

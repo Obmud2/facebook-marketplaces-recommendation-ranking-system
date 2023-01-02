@@ -1,4 +1,5 @@
 data/clean_images
+model_evaluation
 data/raw
 runs
 .DS_Store
