@@ -3,8 +3,9 @@ from PIL import Image
 
 class ImageProcessor:
 
-    def _transform_image(self, img_path):        
-        img = Image.open(img_path)
+    def _transform_image(self, img):        
+        if type(img) == str:
+            img = Image.open(img)
         size = img.size
         final_size = 128
         ratio = float(final_size) / max(size)
@@ -16,5 +17,5 @@ class ImageProcessor:
         new_img = new_img[None, :]
         return new_img
 
-    def __call__(self, img_path):
-        return self._transform_image(img_path)
+    def __call__(self, img):
+        return self._transform_image(img)

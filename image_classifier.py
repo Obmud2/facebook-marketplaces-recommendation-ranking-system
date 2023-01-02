@@ -37,7 +37,6 @@ class TransferLearning(torch.nn.Module):
         for i, param in enumerate(self.layers.parameters()):
             if i<158:
                 param.requires_grad = False
-            print(f"{i} {param.requires_grad}: {param.shape}")
 
         self.layers.fc = torch.nn.Sequential(
             torch.nn.Linear(2048, 13)
@@ -45,6 +44,13 @@ class TransferLearning(torch.nn.Module):
         
     def forward(self, features):
         return self.layers(features)
+
+    def predict(self, features):
+        with torch.no_grad():
+            prediction = self.forward(features)
+            classes = prediction.max(1)[1]
+            probabilities = torch.softmax(prediction, dim=1)
+            return (classes, probabilities, prediction)
 
 class CNN(torch.nn.Module):
     def __init__(self):
@@ -128,11 +134,11 @@ def validate_model(model, dataloader):
             features, labels = batch
             features = features.to(device)
             labels = labels.to(device)
-            prediction = model(features)
 
-            prediction_values = prediction.max(1)[1]
-            total_correct += sum(prediction_values == labels)
-            loss += F.cross_entropy(prediction, labels.long()).item() * len(prediction_values)
+            predicted_classes, probabilities, prediction = model.predict(features)
+
+            total_correct += sum(predicted_classes == labels)
+            loss += F.cross_entropy(prediction, labels.long()).item() * len(prediction)
 
         acc = total_correct / len(dataloader.dataset)
         loss = loss / len(dataloader.dataset)
@@ -145,21 +151,26 @@ def select_device():
         device = torch.device('cpu')
     return device
 
+def save_model(model, mdl_path):
+    if not os.path.exists(mdl_path):
+        os.makedirs(mdl_path)
+    torch.save(model.state_dict(), os.path.join(mdl_path, 'image_model.pt'))
+    with open(os.path.join(mdl_path, 'model_data.json'), 'w', encoding='utf-8') as f:
+            json.dump(model_data, f, ensure_ascii=False, indent=4)
+
 if __name__ == "__main__":
     device = select_device()
     print(f"Using device: {device.type}")
     dataset = ImageDataset()
     batch_size = 32
+
     train_dataset, validation_dataset, test_dataset = random_split(dataset, [0.7, 0.15, 0.15], generator=torch.Generator().manual_seed(41))
     train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size)
     valid_loader = DataLoader(validation_dataset, batch_size)
+    test_loader = DataLoader(test_dataset, batch_size)
     model = TransferLearning().to(device)
     model_data = train(model)
-
-    torch.save(model.state_dict(), 'final_models/image_model.pt')
-    with open('final_models/model_data.json', 'w', encoding='utf-8') as f:
-            json.dump(model_data, f, ensure_ascii=False, indent=4)
+    save_model(model, 'final_models')
 
     """
     # Load model:
