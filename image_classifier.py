@@ -117,6 +117,7 @@ def train(model, epochs=50):
         with open(os.path.join(folder_name, f'epoch_{epoch}_data.json'), 'w', encoding='utf-8') as f:
             json.dump(model_data, f, ensure_ascii=False, indent=4)
         # scheduler.step()
+    return model_data
 
 def validate_model(model, dataloader):
     #model.eval()
@@ -154,9 +155,11 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, batch_size)
     valid_loader = DataLoader(validation_dataset, batch_size)
     model = TransferLearning().to(device)
-    train(model)
+    model_data = train(model)
 
     torch.save(model.state_dict(), 'final_models/image_model.pt')
+    with open('final_models/model_data.json', 'w', encoding='utf-8') as f:
+            json.dump(model_data, f, ensure_ascii=False, indent=4)
 
     """
     # Load model:
